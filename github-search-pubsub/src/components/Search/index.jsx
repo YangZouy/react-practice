@@ -1,0 +1,45 @@
+import React, { Component } from 'react'
+import axios from 'axios'
+// 使用pubsub
+import PubSub from 'pubsub-js'
+
+export default class Search extends Component {
+
+  // 通过search组件将数据传递给List组件进行展示
+  // 使用消息订阅机制
+  // 发布消息的一方
+
+	search = ()=>{
+
+		//获取用户的输入(连续解构赋值+重命名)
+		const {keyWordElement:{value:keyWord}} = this
+    // console.log(keyWord)
+    // this.props.updateAppState({isFirst:false,isLoading:true})
+    PubSub.publish('update', {isFirst:false,isLoading:true})
+		//发送网络请求
+		axios.get(`/api1/search/users?q=${keyWord}`).then(
+			response => {
+        // 调用App中的方法
+        // this.props.updateAppState({isLoading:false,personObj:response.data.items})
+        PubSub.publish('update', {isLoading:false,personObj:response.data.items})
+			},
+			error => {
+				//请求失败后通知App更新状态
+				// this.props.updateAppState({isLoading:false,err:error.message})
+        PubSub.publish('update', {isLoading:false,err:error.message})
+			}
+		)
+	}
+
+	render() {
+		return (
+			<section className="jumbotron">
+				<h3 className="jumbotron-heading">搜索github用户</h3>
+				<div>
+					<input ref={c => this.keyWordElement = c} type="text" placeholder="输入关键词点击搜索"/>&nbsp;
+					<button onClick={this.search}>搜索</button>
+				</div>
+			</section>
+		)
+	}
+}
